@@ -8,6 +8,7 @@ namespace ApiCore
 	{
 		Query,
 		Header,
-		Body
+		Body,
+		From
 	}
 }

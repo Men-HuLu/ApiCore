@@ -11,10 +11,5 @@
 			Name = name;
 			Value = value;
 		}
-		public HttpParameter ToLower()
-		{
-			Name = Name.ToLower();
-			return this;
-		}
 	}
 }

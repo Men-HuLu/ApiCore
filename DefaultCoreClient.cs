@@ -14,16 +14,25 @@ namespace ApiCore
         public string Endpoint { get; }
         public string ContentType { get; set; }
         public string UserAgent { get; set; }
+        public string Accept { get; set; }
+        public string Host { get; set; }
+        public string Referer { get; set; }
         public bool KeepAlive { get; set; }
         public int Timeout { get; set; }
+        public CookieContainer CookieContainer { get; set; }
         public DefaultCoreClient(string endpoint)
         {
+            Endpoint = endpoint;
             KeepAlive = true;
             Timeout = 10000;
-            ContentType = "application/json;charset=utf-8";
+            ContentType = "application/x-www-form-urlencoded";
             UserAgent = "Mozilla/5.0 (Linux; Android 10; WLZ-AL10 Build/HUAWEIWLZ-AL10; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045513 Mobile Safari/537.36 MMWEBID/4985 MicroMessenger/7.0.22.1820(0x2700163B) Process/tools WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64";
-
-            Endpoint = endpoint;
+            Accept = "*/*";
+            Host = "wx.sxhealth.net";
+            Referer = "wx.sxhealth.net";
+            CookieContainer _container = new CookieContainer();
+            _container.Add(new Cookie("JSESSIONID", "AA644E43F2FDB7159DEC7BED2E7A2EAF", "/sxsrmyynew", "wx.sxhealth.net"));
+            CookieContainer = _container;
         }
 
         protected virtual byte[] BuildBody(IDictionary<string, object> paras)
@@ -93,7 +102,7 @@ namespace ApiCore
         {
             Type attribute = typeof(HttpPropertyAttribute);
             Dictionary<HttpMember, Dictionary<string, object>> dictionary = req.GetType().GetProperties()
-                .Where(p => p.IsDefined(attribute, false))                
+                .Where(p => p.IsDefined(attribute, false))
                 .Select(p => new HttpParameter(
                     ((HttpPropertyAttribute)p.GetCustomAttributes(attribute, false).First()).Member,
                     p.Name,
@@ -108,8 +117,11 @@ namespace ApiCore
             httpWebRequest.KeepAlive = KeepAlive;
             httpWebRequest.Timeout = Timeout;
             httpWebRequest.ContentType = ContentType;
-            httpWebRequest.Accept = "*/*";
             httpWebRequest.UserAgent = UserAgent;
+            httpWebRequest.Accept = Accept;
+            httpWebRequest.Host = Host;
+            httpWebRequest.Referer = Referer;
+            httpWebRequest.CookieContainer = CookieContainer;
             if (dictionary.TryGetValue(HttpMember.Header, out Dictionary<string, object> dictionary2))
             {
                 foreach (KeyValuePair<string, object> keyValuePair in dictionary2)
@@ -127,7 +139,17 @@ namespace ApiCore
                     return httpWebRequest;
                 }
             }
-            httpWebRequest.ContentLength = 0L;
+            if (dictionary.TryGetValue(HttpMember.From, out Dictionary<string, object> paras2))
+            {
+                string s = string.Join("&", paras2.Select(r => $"{r.Key}={r.Value}").ToArray());
+                byte[] array = Encoding.UTF8.GetBytes(s);
+                httpWebRequest.ContentLength = array.Length;
+                using (Stream requestStream = httpWebRequest.GetRequestStream())
+                {
+                    requestStream.Write(array, 0, array.Length);
+                    return httpWebRequest;
+                }
+            }
             return httpWebRequest;
         }
         public virtual Response Execute(IRequest req)
