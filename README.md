@@ -7,6 +7,7 @@ from-data
 
 Demo:
 Request类
+
     public class DateRequest : IRequest<DateRsponse>
     {
         public DateRequest(string _cardNo, string _patientID) {
@@ -21,7 +22,9 @@ Request类
         public string GetPath() => $"rest/getYYDateList";
       
     }
+
 Rsponse类
+
     public class DateRsponse
     {
         public Obj2 obj { get; set; }
