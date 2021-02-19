@@ -38,7 +38,8 @@ Rsponse类
     }
     
     
-    请求例子
+请求例子
+
     private void GetHttpDate()
     {
         var client = new DefaultCoreClient(baseAddress);
